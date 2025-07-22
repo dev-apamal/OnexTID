@@ -37,6 +37,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "034eec28-46c6-45b7-bb9f-2ca5cbb304e8"
+      }
+    },
+    "owner": "dev-apamal"
   }
 }
