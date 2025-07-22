@@ -10,7 +10,7 @@ import { router } from "expo-router";
 import { useAuth } from "../../contexts/AuthContext";
 
 export default function HomeScreen() {
-  const { user, logOut } = useAuth();
+  const { user, logout } = useAuth();
 
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
@@ -23,7 +23,7 @@ export default function HomeScreen() {
         style: "destructive",
         onPress: async () => {
           try {
-            await logOut();
+            await logout();
             router.replace("/(auth)/sign-in");
           } catch (error) {
             Alert.alert("Error", "Failed to logout. Please try again.");

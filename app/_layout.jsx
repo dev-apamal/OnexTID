@@ -1,35 +1,50 @@
-// app/_layout.tsx
-import { Stack, SplashScreen } from "expo-router";
-import { AuthProvider, useAuth } from "../contexts/AuthContext";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { router } from "expo-router";
+import "react-native-reanimated";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
-// Prevent the splash screen from auto-hiding before asset loading is complete
-SplashScreen.preventAutoHideAsync();
-
-// Splash screen controller component
-function SplashScreenController() {
-  const { isLoading } = useAuth();
+// Create a separate component for navigation logic
+function NavigationHandler({ children }) {
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
     if (!isLoading) {
-      // Hide splash screen once auth state is determined
-      SplashScreen.hideAsync();
+      if (!user) {
+        // No user, redirect to sign-in
+        router.replace("/(auth)/sign-in");
+      } else if (!user.emailVerified) {
+        // User exists but not verified, redirect to verify-email
+        router.replace("/(auth)/verify-email");
+      } else {
+        // User verified, redirect to main app
+        router.replace("/(app)/");
+      }
     }
-  }, [isLoading]);
+  }, [user, isLoading]);
 
-  return null;
+  // Show loading while determining auth state
+  if (isLoading) {
+    return null; // or a loading screen
+  }
+
+  return children;
 }
 
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <SplashScreenController />
-      <Stack screenOptions={{ headerShown: false }}>
-        {/* Authentication Routes */}
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        {/* Protected App Routes */}
-        <Stack.Screen name="(app)" options={{ headerShown: false }} />
-      </Stack>
+      <NavigationHandler>
+        <Stack screenOptions={{ headerShown: false }}>
+          {/* Auth routes */}
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+          {/* Main app routes */}
+          <Stack.Screen name="(app)" options={{ headerShown: false }} />
+          {/* Error route */}
+        </Stack>
+      </NavigationHandler>
+      <StatusBar style="auto" />
     </AuthProvider>
   );
 }
