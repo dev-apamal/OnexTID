@@ -8,7 +8,8 @@ import {
   sendPasswordResetEmail,
   updateProfile,
 } from "firebase/auth";
-import { auth } from "../firebaseConfig";
+import { auth, firestore } from "../firebaseConfig";
+import { doc, setDoc } from "firebase/firestore";
 
 const AuthContext = createContext(null);
 
@@ -40,7 +41,6 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       setIsLoading(true);
-
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -53,6 +53,13 @@ export const AuthProvider = ({ children }) => {
           displayName: displayName,
         });
       }
+
+      const userId = userCredential.user.uid;
+      await setDoc(doc(firestore, "users", userId), {
+        name: displayName || "",
+        email: email,
+        createdAt: new Date().toISOString(),
+      });
 
       return userCredential.user;
     } catch (error) {
