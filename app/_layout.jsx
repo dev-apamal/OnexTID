@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { router } from "expo-router";
 import "react-native-reanimated";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import "../global.css";
 
 // Create a separate component for navigation logic
 function NavigationHandler({ children }) {

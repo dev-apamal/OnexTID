@@ -7,13 +7,15 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Pressable,
 } from "react-native";
 import { Link, router } from "expo-router";
 import { useAuth } from "../../contexts/AuthContext";
+import { globalStyles } from "../../constants/styles";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SignUpScreen() {
   const [formData, setFormData] = useState({
@@ -291,198 +293,229 @@ export default function SignUpScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={globalStyles.safeAreaContainer}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardAvoidingView}
+        style={globalStyles.keyboardAvoidingContainer}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContainer}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.header}>
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join OneXtID today</Text>
-          </View>
-
-          <View style={styles.form}>
-            {/* Full Name Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Full Name</Text>
-              <TextInput
-                style={[styles.input, errors.fullName && styles.inputError]}
-                placeholder="Enter your full name"
-                value={formData.fullName}
-                onChangeText={(value) => updateFormData("fullName", value)}
-                onBlur={() => handleFieldBlur("fullName")}
-                autoCapitalize="words"
-                autoCorrect={false}
-                textContentType="name"
-                returnKeyType="next"
-              />
-              {errors.fullName && (
-                <Text style={styles.errorText}>{errors.fullName}</Text>
-              )}
+        <ScrollView keyboardShouldPersistTaps="handled">
+          <View style={globalStyles.content}>
+            <View className="flex-col w-ful gap-1 mb-6">
+              <Text className="text-2xl font-bold ">Create Account</Text>
+              <Text className="text-base font-medium">Join OneXtID today</Text>
             </View>
-
-            {/* Email Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email Address</Text>
-              <TextInput
-                style={[styles.input, errors.email && styles.inputError]}
-                placeholder="Enter your email"
-                value={formData.email}
-                onChangeText={(value) =>
-                  updateFormData("email", value.toLowerCase())
-                }
-                onBlur={() => handleFieldBlur("email")}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                textContentType="emailAddress"
-                returnKeyType="next"
-              />
-              {errors.email && (
-                <Text style={styles.errorText}>{errors.email}</Text>
-              )}
-            </View>
-
-            {/* Phone Number Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Phone Number</Text>
-              <TextInput
-                style={[styles.input, errors.phoneNumber && styles.inputError]}
-                placeholder="+91 98765 43210"
-                value={formData.phoneNumber}
-                onChangeText={(value) => updateFormData("phoneNumber", value)}
-                onBlur={() => handleFieldBlur("phoneNumber")}
-                keyboardType="phone-pad"
-                autoCorrect={false}
-                textContentType="telephoneNumber"
-                returnKeyType="next"
-                maxLength={17} // +91 XXXXX XXXXX = 17 characters
-              />
-              {errors.phoneNumber && (
-                <Text style={styles.errorText}>{errors.phoneNumber}</Text>
-              )}
-              {!errors.phoneNumber &&
-                formData.phoneNumber &&
-                formData.phoneNumber !== "+91 " && (
-                  <Text style={styles.helpText}>
-                    10-digit Indian mobile number
+            <View className="w-full gap-4">
+              <View>
+                <Text className="text-sm font-medium">
+                  Full Name<Text className="text-red-500">*</Text>
+                </Text>
+                <TextInput
+                  style={[styles.input, errors.fullName && styles.inputError]}
+                  placeholder="Enter your full name"
+                  value={formData.fullName}
+                  onChangeText={(value) => updateFormData("fullName", value)}
+                  onBlur={() => handleFieldBlur("fullName")}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  textContentType="name"
+                  returnKeyType="next"
+                />
+                {errors.fullName && (
+                  <Text className="text-sm mt-1 mb-1 text-red-500">
+                    {errors.fullName}
                   </Text>
                 )}
-            </View>
-
-            {/* ← NEW: TCMC Number Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>TCMC Registration Number</Text>
-              <TextInput
-                style={[styles.input, errors.tcmcNumber && styles.inputError]}
-                placeholder="Enter your TCMC number"
-                value={formData.tcmcNumber}
-                onChangeText={(value) => updateFormData("tcmcNumber", value)}
-                onBlur={() => handleFieldBlur("tcmcNumber")}
-                keyboardType="numeric"
-                autoCorrect={false}
-                returnKeyType="next"
-                maxLength={6} // Maximum 6 digits for 120000
-              />
-              {errors.tcmcNumber && (
-                <Text style={styles.errorText}>{errors.tcmcNumber}</Text>
-              )}
-              {!errors.tcmcNumber && formData.tcmcNumber && (
-                <Text style={styles.helpText}>Must not exceed 120000</Text>
-              )}
-            </View>
-
-            {/* Password Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={[styles.input, errors.password && styles.inputError]}
-                placeholder="Create a strong password"
-                value={formData.password}
-                onChangeText={(value) => updateFormData("password", value)}
-                onBlur={() => handleFieldBlur("password")}
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                textContentType="newPassword"
-                returnKeyType="next"
-              />
-              {errors.password && (
-                <Text style={styles.errorText}>{errors.password}</Text>
-              )}
-              {!errors.password && formData.password && (
-                <Text style={styles.helpText}>
-                  Password must be at least 6 characters with a number and
-                  lowercase letter
+              </View>
+              {/* Email Input */}
+              <View>
+                <Text className="text-sm font-medium">
+                  Email Address<Text className="text-red-500">*</Text>
                 </Text>
-              )}
-            </View>
-
-            {/* Confirm Password Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Confirm Password</Text>
-              <TextInput
-                style={[
-                  styles.input,
-                  errors.confirmPassword && styles.inputError,
-                ]}
-                placeholder="Confirm your password"
-                value={formData.confirmPassword}
-                onChangeText={(value) =>
-                  updateFormData("confirmPassword", value)
-                }
-                onBlur={() => handleFieldBlur("confirmPassword")}
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                textContentType="newPassword"
-                returnKeyType="done"
-                onSubmitEditing={handleSignUp}
-              />
-              {errors.confirmPassword && (
-                <Text style={styles.errorText}>{errors.confirmPassword}</Text>
-              )}
-            </View>
-
-            {/* Sign Up Button */}
-            <TouchableOpacity
-              style={[
-                styles.signUpButton,
-                (!isFormValid() || isLoading) && styles.buttonDisabled,
-              ]}
-              onPress={handleSignUp}
-              disabled={!isFormValid() || isLoading}
-            >
-              {isLoading ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color="#fff" />
-                  <Text style={styles.signUpButtonText}>
-                    Creating Account...
+                <TextInput
+                  style={[styles.input, errors.email && styles.inputError]}
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChangeText={(value) =>
+                    updateFormData("email", value.toLowerCase())
+                  }
+                  onBlur={() => handleFieldBlur("email")}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="emailAddress"
+                  returnKeyType="next"
+                />
+                {errors.email && (
+                  <Text className="text-sm mt-1 mb-1 text-red-500">
+                    {errors.email}
                   </Text>
-                </View>
-              ) : (
-                <Text style={styles.signUpButtonText}>Create Account</Text>
-              )}
-            </TouchableOpacity>
+                )}
+              </View>
 
-            <Text style={styles.termsText}>
-              By creating an account, you agree to our{" "}
-              <Text style={styles.linkText}>Terms of Service</Text> and{" "}
-              <Text style={styles.linkText}>Privacy Policy</Text>
-            </Text>
+              {/* Phone Number Input */}
+              <View>
+                <Text className="text-sm font-medium">
+                  Phone Number<Text className="text-red-500">*</Text>
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    errors.phoneNumber && styles.inputError,
+                  ]}
+                  placeholder="+91 98765 43210"
+                  value={formData.phoneNumber}
+                  onChangeText={(value) => updateFormData("phoneNumber", value)}
+                  onBlur={() => handleFieldBlur("phoneNumber")}
+                  keyboardType="phone-pad"
+                  autoCorrect={false}
+                  textContentType="telephoneNumber"
+                  returnKeyType="next"
+                  maxLength={17} // +91 XXXXX XXXXX = 17 characters
+                />
+                {errors.phoneNumber && (
+                  <Text className="text-sm mt-1 mb-1 text-red-500">
+                    {errors.phoneNumber}
+                  </Text>
+                )}
+                {!errors.phoneNumber &&
+                  formData.phoneNumber &&
+                  formData.phoneNumber !== "+91 " && (
+                    <Text style={styles.helpText}>
+                      10-digit Indian mobile number
+                    </Text>
+                  )}
+              </View>
 
-            <View style={styles.loginLink}>
-              <Text style={styles.loginText}>Already have an account? </Text>
-              <Link href="/(auth)/sign-in" asChild>
-                <TouchableOpacity>
-                  <Text style={styles.loginLinkText}>Sign In</Text>
-                </TouchableOpacity>
-              </Link>
+              {/* ← NEW: TCMC Number Input */}
+              <View>
+                <Text className="text-sm font-medium">
+                  TCMC Registration Number
+                  <Text className="text-red-500">*</Text>
+                </Text>
+                <TextInput
+                  style={[styles.input, errors.tcmcNumber && styles.inputError]}
+                  placeholder="Enter your TCMC number"
+                  value={formData.tcmcNumber}
+                  onChangeText={(value) => updateFormData("tcmcNumber", value)}
+                  onBlur={() => handleFieldBlur("tcmcNumber")}
+                  keyboardType="numeric"
+                  autoCorrect={false}
+                  returnKeyType="next"
+                  maxLength={6} // Maximum 6 digits for 120000
+                />
+                {errors.tcmcNumber && (
+                  <Text className="text-sm mt-1 mb-1 text-red-500">
+                    {errors.tcmcNumber}
+                  </Text>
+                )}
+                {!errors.tcmcNumber && formData.tcmcNumber && (
+                  <Text style={styles.helpText}>Must not exceed 120000</Text>
+                )}
+              </View>
+
+              {/* Password Input */}
+              <View>
+                <Text className="text-sm font-medium">
+                  Password<Text className="text-red-500">*</Text>
+                </Text>
+                <TextInput
+                  style={[styles.input, errors.password && styles.inputError]}
+                  placeholder="Create a strong password"
+                  value={formData.password}
+                  onChangeText={(value) => updateFormData("password", value)}
+                  onBlur={() => handleFieldBlur("password")}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="newPassword"
+                  returnKeyType="next"
+                />
+                {errors.password && (
+                  <Text className="text-sm mt-1 mb-1 text-red-500">
+                    {errors.password}
+                  </Text>
+                )}
+                {!errors.password && formData.password && (
+                  <Text style={styles.helpText}>
+                    Password must be at least 6 characters with a number and
+                    lowercase letter
+                  </Text>
+                )}
+              </View>
+
+              {/* Confirm Password Input */}
+              <View>
+                <Text className="text-sm font-medium">
+                  Confirm Password<Text className="text-red-500">*</Text>
+                </Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    errors.confirmPassword && styles.inputError,
+                  ]}
+                  placeholder="Confirm your password"
+                  value={formData.confirmPassword}
+                  onChangeText={(value) =>
+                    updateFormData("confirmPassword", value)
+                  }
+                  onBlur={() => handleFieldBlur("confirmPassword")}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="newPassword"
+                  returnKeyType="done"
+                  onSubmitEditing={handleSignUp}
+                />
+                {errors.confirmPassword && (
+                  <Text className="text-sm mt-1 mb-1 text-red-500">
+                    {errors.confirmPassword}
+                  </Text>
+                )}
+              </View>
+
+              {/* Sign Up Button */}
+              <Pressable
+                style={[
+                  globalStyles.button,
+
+                  (!isFormValid() || isLoading) && styles.buttonDisabled,
+                ]}
+                onPress={handleSignUp}
+                disabled={!isFormValid() || isLoading}
+              >
+                {isLoading ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="small" color="#fff" />
+                    <Text className="text-base font-bold">
+                      Creating Account...
+                    </Text>
+                  </View>
+                ) : (
+                  <Text className="text-lg font-bold text-white">
+                    Create Account
+                  </Text>
+                )}
+              </Pressable>
+
+              <Text className="text-xs text-center">
+                By creating an account, you agree to our{" "}
+                <Text className="text-blue-700 underline">
+                  Terms of Service
+                </Text>{" "}
+                and{" "}
+                <Text className="text-blue-700 underline">Privacy Policy</Text>
+              </Text>
+
+              <View className="flex-row justify-center gap-1 items-center">
+                <Text className="text-sm">Already have an account? </Text>
+                <Link href="/(auth)/sign-in" asChild>
+                  <Pressable>
+                    <Text className="text-sm text-blue-700 font-bold underline">
+                      Sign In
+                    </Text>
+                  </Pressable>
+                </Link>
+              </View>
             </View>
           </View>
         </ScrollView>
@@ -533,13 +566,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    borderBottomWidth: 1,
     fontSize: 16,
-    backgroundColor: "#f9f9f9",
+    paddingVertical: 12,
   },
   inputError: {
     borderColor: "#ff3b30",

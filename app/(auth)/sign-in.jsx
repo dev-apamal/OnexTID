@@ -6,13 +6,16 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  ScrollView,
+  Pressable,
 } from "react-native";
 import { Link, router } from "expo-router";
 import { useAuth } from "../../contexts/AuthContext";
+import { globalStyles } from "../../constants/styles";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SignInScreen() {
   const [formData, setFormData] = useState({
@@ -194,106 +197,115 @@ export default function SignInScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={globalStyles.safeAreaContainer}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardAvoidingView}
+        style={globalStyles.keyboardAvoidingContainer}
       >
-        <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to your OneXtID account</Text>
+        <ScrollView keyboardShouldPersistTaps="handled">
+          <View style={globalStyles.content}>
+            <View className="flex-col w-ful gap-1 mb-6">
+              <Text className="text-2xl font-bold ">Welcome Back</Text>
+              <Text className="text-base font-medium">
+                Sign in to your OneXtID account
+              </Text>
+            </View>
+
+            <View className="w-full gap-4">
+              {/* Email Input */}
+              <View>
+                <Text className="text-sm font-medium">
+                  Email Address<Text className="text-red-500">*</Text>
+                </Text>
+                <TextInput
+                  style={[styles.input, errors.email && styles.inputError]}
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChangeText={(value) =>
+                    updateFormData("email", value.toLowerCase())
+                  }
+                  onBlur={() => handleFieldBlur("email")}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="emailAddress"
+                  returnKeyType="next"
+                />
+                {errors.email && (
+                  <Text className="text-sm mt-1 mb-1 text-red-500">
+                    {errors.email}
+                  </Text>
+                )}
+              </View>
+
+              {/* Password Input */}
+              <View>
+                <Text className="text-sm font-medium">
+                  Password<Text className="text-red-500">*</Text>
+                </Text>
+                <TextInput
+                  style={[styles.input, errors.password && styles.inputError]}
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChangeText={(value) => updateFormData("password", value)}
+                  onBlur={() => handleFieldBlur("password")}
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="password"
+                  returnKeyType="done"
+                  onSubmitEditing={handleLogin}
+                />
+                {errors.password && (
+                  <Text className="text-sm mt-1 mb-1 text-red-500">
+                    {errors.password}
+                  </Text>
+                )}
+              </View>
+
+              {/* Forgot Password Link */}
+              <Pressable
+                className="self-end mb-4"
+                onPress={handleForgotPassword}
+              >
+                <Text className="text-sm font-bold text-blue-700 underline">
+                  Forgot Password?
+                </Text>
+              </Pressable>
+
+              {/* Login Button */}
+              <Pressable
+                style={[
+                  globalStyles.button,
+                  (!isFormValid() || isLoading) && styles.buttonDisabled,
+                ]}
+                onPress={handleLogin}
+                disabled={!isFormValid() || isLoading}
+              >
+                {isLoading ? (
+                  <View className="flex-row items-center">
+                    <ActivityIndicator size="small" color="#fff" />
+                    <Text className="text-base font-bold">Signing In...</Text>
+                  </View>
+                ) : (
+                  <Text className="text-lg font-bold text-white">Sign In</Text>
+                )}
+              </Pressable>
+              {/* Sign Up Link */}
+
+              <View className="flex-row justify-center gap-1 items-center">
+                <Text className="text-sm">Don't have an account?</Text>
+                <Link href="/(auth)/sign-up" asChild>
+                  <Pressable>
+                    <Text className="text-sm text-blue-700 font-bold underline">
+                      Create Account
+                    </Text>
+                  </Pressable>
+                </Link>
+              </View>
+            </View>
           </View>
-
-          <View style={styles.form}>
-            {/* Email Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email Address</Text>
-              <TextInput
-                style={[styles.input, errors.email && styles.inputError]}
-                placeholder="Enter your email"
-                value={formData.email}
-                onChangeText={(value) =>
-                  updateFormData("email", value.toLowerCase())
-                }
-                onBlur={() => handleFieldBlur("email")}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                textContentType="emailAddress"
-                returnKeyType="next"
-              />
-              {errors.email && (
-                <Text style={styles.errorText}>{errors.email}</Text>
-              )}
-            </View>
-
-            {/* Password Input */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={[styles.input, errors.password && styles.inputError]}
-                placeholder="Enter your password"
-                value={formData.password}
-                onChangeText={(value) => updateFormData("password", value)}
-                onBlur={() => handleFieldBlur("password")}
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                textContentType="password"
-                returnKeyType="done"
-                onSubmitEditing={handleLogin}
-              />
-              {errors.password && (
-                <Text style={styles.errorText}>{errors.password}</Text>
-              )}
-            </View>
-
-            {/* Forgot Password Link */}
-            <TouchableOpacity
-              style={styles.forgotPassword}
-              onPress={handleForgotPassword}
-            >
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-            </TouchableOpacity>
-
-            {/* Login Button */}
-            <TouchableOpacity
-              style={[
-                styles.loginButton,
-                (!isFormValid() || isLoading) && styles.buttonDisabled,
-              ]}
-              onPress={handleLogin}
-              disabled={!isFormValid() || isLoading}
-            >
-              {isLoading ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color="#fff" />
-                  <Text style={styles.loginButtonText}>Signing In...</Text>
-                </View>
-              ) : (
-                <Text style={styles.loginButtonText}>Sign In</Text>
-              )}
-            </TouchableOpacity>
-
-            {/* Divider */}
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            {/* Sign Up Link */}
-            <View style={styles.signUpLink}>
-              <Text style={styles.signUpText}>Don't have an account? </Text>
-              <Link href="/(auth)/sign-up" asChild>
-                <TouchableOpacity>
-                  <Text style={styles.signUpLinkText}>Create Account</Text>
-                </TouchableOpacity>
-              </Link>
-            </View>
-          </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -341,13 +353,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    borderBottomWidth: 1,
     fontSize: 16,
-    backgroundColor: "#f9f9f9",
+    paddingVertical: 12,
   },
   inputError: {
     borderColor: "#ff3b30",
@@ -356,6 +364,7 @@ const styles = StyleSheet.create({
     color: "#ff3b30",
     fontSize: 14,
     marginTop: 4,
+    marginBottom: 4,
   },
   forgotPassword: {
     alignSelf: "flex-end",
