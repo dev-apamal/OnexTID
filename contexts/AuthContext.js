@@ -8,7 +8,8 @@ import {
   sendPasswordResetEmail,
   updateProfile,
 } from "firebase/auth";
-import { auth } from "../firebaseConfig";
+import { auth, firestore } from "../firebaseConfig";
+import { doc, setDoc } from "firebase/firestore";
 
 const AuthContext = createContext({});
 
@@ -46,7 +47,7 @@ export const AuthProvider = ({ children }) => {
   }, [initializing]);
 
   // Create user account and send verification email
-  const signUp = async (email, password, fullName) => {
+  const signUp = async (email, password, fullName, phoneNumber, tcmcNumber) => {
     try {
       setIsLoading(true);
 
@@ -65,6 +66,13 @@ export const AuthProvider = ({ children }) => {
         });
       }
 
+      await setDoc(doc(firestore, "users", user.uid), {
+        fullName,
+        email,
+        phoneNumber,
+        tcmcNumber,
+        createdAt: new Date().toISOString(),
+      });
       // Send email verification immediately after account creation
       await sendEmailVerification(user);
 

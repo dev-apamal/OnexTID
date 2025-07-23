@@ -19,6 +19,8 @@ export default function SignUpScreen() {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
+    phoneNumber: "+91",
+    tcmcNumber: "", // ← NEW: Added TCMC number field
     password: "",
     confirmPassword: "",
   });
@@ -33,6 +35,8 @@ export default function SignUpScreen() {
     // Validate each field using the same logic
     const fullNameError = validateField("fullName", formData.fullName);
     const emailError = validateField("email", formData.email);
+    const phoneNumberError = validateField("phoneNumber", formData.phoneNumber);
+    const tcmcNumberError = validateField("tcmcNumber", formData.tcmcNumber); // ← NEW
     const passwordError = validateField("password", formData.password);
     const confirmPasswordError = validateField(
       "confirmPassword",
@@ -41,6 +45,8 @@ export default function SignUpScreen() {
 
     if (fullNameError) newErrors.fullName = fullNameError;
     if (emailError) newErrors.email = emailError;
+    if (phoneNumberError) newErrors.phoneNumber = phoneNumberError;
+    if (tcmcNumberError) newErrors.tcmcNumber = tcmcNumberError; // ← NEW
     if (passwordError) newErrors.password = passwordError;
     if (confirmPasswordError) newErrors.confirmPassword = confirmPasswordError;
 
@@ -56,12 +62,12 @@ export default function SignUpScreen() {
       const result = await signUp(
         formData.email.trim().toLowerCase(),
         formData.password,
-        formData.fullName.trim()
+        formData.fullName.trim(),
+        formData.phoneNumber.trim(),
+        formData.tcmcNumber.trim() // ← NEW: Pass TCMC number
       );
 
       if (result.success) {
-        // Don't show alert here, just navigate directly
-        // The auth state will handle the redirect to verify-email
         router.replace("/(auth)/verify-email");
       } else {
         Alert.alert("Sign Up Failed", result.message);
@@ -72,6 +78,27 @@ export default function SignUpScreen() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Phone number formatting function
+  const formatPhoneNumber = (text) => {
+    if (!text.startsWith("+91")) {
+      text = "+91 " + text.replace(/^\+?91\s?/, "");
+    }
+    const cleaned = text.replace(/^\+91\s?/, "").replace(/\D/g, "");
+    if (cleaned.length <= 5) {
+      return `+91 ${cleaned}`;
+    } else {
+      return `+91 ${cleaned.slice(0, 5)} ${cleaned.slice(5, 10)}`;
+    }
+  };
+
+  // ← NEW: TCMC number formatting function
+  const formatTcmcNumber = (text) => {
+    // Remove all non-numeric characters
+    const cleaned = text.replace(/\D/g, "");
+    // Return the cleaned number, limited to 6 digits max (120000)
+    return cleaned.slice(0, 6);
   };
 
   const validateField = (field, value, passwordForConfirm = null) => {
@@ -90,6 +117,35 @@ export default function SignUpScreen() {
           return "Email is required";
         } else if (!emailRegex.test(value.trim())) {
           return "Please enter a valid email address";
+        }
+        return null;
+
+      case "phoneNumber":
+        const cleanedPhone = value.replace(/^\+91\s?/, "").replace(/\D/g, "");
+
+        if (!value.trim() || value.trim() === "+91") {
+          return "Phone number is required";
+        } else if (cleanedPhone.length < 10) {
+          return "Please enter a valid 10-digit phone number";
+        } else if (cleanedPhone.length > 10) {
+          return "Phone number should be 10 digits";
+        } else if (!cleanedPhone.match(/^[6-9]\d{9}$/)) {
+          return "Please enter a valid Indian mobile number";
+        }
+        return null;
+
+      // ← NEW: TCMC number validation
+      case "tcmcNumber":
+        const cleanedTcmc = value.replace(/\D/g, "");
+
+        if (!value.trim()) {
+          return "TCMC registration number is required";
+        } else if (cleanedTcmc.length === 0) {
+          return "TCMC number must contain only numbers";
+        } else if (parseInt(cleanedTcmc) > 120000) {
+          return "TCMC number cannot exceed 120000";
+        } else if (parseInt(cleanedTcmc) < 1) {
+          return "Please enter a valid TCMC number";
         }
         return null;
 
@@ -129,18 +185,39 @@ export default function SignUpScreen() {
   };
 
   const updateFormData = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Special handling for phone number formatting
+    if (field === "phoneNumber") {
+      // Prevent deletion of +91
+      if (value.length < 4) {
+        value = "+91 ";
+      }
+      const formattedValue = formatPhoneNumber(value);
+      setFormData((prev) => ({ ...prev, [field]: formattedValue }));
+    }
+    // ← NEW: Special handling for TCMC number formatting
+    else if (field === "tcmcNumber") {
+      const formattedValue = formatTcmcNumber(value);
+      setFormData((prev) => ({ ...prev, [field]: formattedValue }));
+    } else {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    }
 
     // Real-time validation - clear error when field becomes valid
     if (errors[field]) {
+      let valueToValidate = value;
+      if (field === "phoneNumber") {
+        valueToValidate = formatPhoneNumber(value);
+      } else if (field === "tcmcNumber") {
+        valueToValidate = formatTcmcNumber(value);
+      }
+
       const error = validateField(
         field,
-        value,
+        valueToValidate,
         field === "confirmPassword" ? formData.password : null
       );
 
       if (!error) {
-        // Field is now valid, clear the error
         setErrors((prev) => {
           const newErrors = { ...prev };
           delete newErrors[field];
@@ -149,8 +226,6 @@ export default function SignUpScreen() {
       }
     }
 
-    // Special case: if user is typing password and confirmPassword has an error,
-    // revalidate confirmPassword
     if (
       field === "password" &&
       errors.confirmPassword &&
@@ -172,30 +247,44 @@ export default function SignUpScreen() {
   };
 
   const isFormValid = () => {
-    // Basic field presence check
+    // ← UPDATED: Added tcmcNumber to required fields check
     if (
       !formData.fullName.trim() ||
       !formData.email.trim() ||
+      !formData.phoneNumber.trim() ||
+      formData.phoneNumber.trim() === "+91" ||
+      !formData.tcmcNumber.trim() ||
       !formData.password ||
       !formData.confirmPassword
     ) {
       return false;
     }
 
-    // Quick validation without setting errors state
-    // Full name check
     if (formData.fullName.trim().length < 2) return false;
 
-    // Email format check
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) return false;
 
-    // Password checks
+    // Phone number validation
+    const cleanedPhone = formData.phoneNumber
+      .replace(/^\+91\s?/, "")
+      .replace(/\D/g, "");
+    if (cleanedPhone.length !== 10 || !cleanedPhone.match(/^[6-9]\d{9}$/))
+      return false;
+
+    // ← NEW: TCMC number validation
+    const cleanedTcmc = formData.tcmcNumber.replace(/\D/g, "");
+    if (
+      !cleanedTcmc ||
+      parseInt(cleanedTcmc) > 120000 ||
+      parseInt(cleanedTcmc) < 1
+    )
+      return false;
+
     if (formData.password.length < 6) return false;
     if (!/(?=.*[a-z])/.test(formData.password)) return false;
     if (!/(?=.*\d)/.test(formData.password)) return false;
 
-    // Password match check
     if (formData.password !== formData.confirmPassword) return false;
 
     return true;
@@ -256,6 +345,55 @@ export default function SignUpScreen() {
               />
               {errors.email && (
                 <Text style={styles.errorText}>{errors.email}</Text>
+              )}
+            </View>
+
+            {/* Phone Number Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Phone Number</Text>
+              <TextInput
+                style={[styles.input, errors.phoneNumber && styles.inputError]}
+                placeholder="+91 98765 43210"
+                value={formData.phoneNumber}
+                onChangeText={(value) => updateFormData("phoneNumber", value)}
+                onBlur={() => handleFieldBlur("phoneNumber")}
+                keyboardType="phone-pad"
+                autoCorrect={false}
+                textContentType="telephoneNumber"
+                returnKeyType="next"
+                maxLength={17} // +91 XXXXX XXXXX = 17 characters
+              />
+              {errors.phoneNumber && (
+                <Text style={styles.errorText}>{errors.phoneNumber}</Text>
+              )}
+              {!errors.phoneNumber &&
+                formData.phoneNumber &&
+                formData.phoneNumber !== "+91 " && (
+                  <Text style={styles.helpText}>
+                    10-digit Indian mobile number
+                  </Text>
+                )}
+            </View>
+
+            {/* ← NEW: TCMC Number Input */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>TCMC Registration Number</Text>
+              <TextInput
+                style={[styles.input, errors.tcmcNumber && styles.inputError]}
+                placeholder="Enter your TCMC number"
+                value={formData.tcmcNumber}
+                onChangeText={(value) => updateFormData("tcmcNumber", value)}
+                onBlur={() => handleFieldBlur("tcmcNumber")}
+                keyboardType="numeric"
+                autoCorrect={false}
+                returnKeyType="next"
+                maxLength={6} // Maximum 6 digits for 120000
+              />
+              {errors.tcmcNumber && (
+                <Text style={styles.errorText}>{errors.tcmcNumber}</Text>
+              )}
+              {!errors.tcmcNumber && formData.tcmcNumber && (
+                <Text style={styles.helpText}>Must not exceed 120000</Text>
               )}
             </View>
 
@@ -332,14 +470,12 @@ export default function SignUpScreen() {
               )}
             </TouchableOpacity>
 
-            {/* Terms and Privacy */}
             <Text style={styles.termsText}>
               By creating an account, you agree to our{" "}
               <Text style={styles.linkText}>Terms of Service</Text> and{" "}
               <Text style={styles.linkText}>Privacy Policy</Text>
             </Text>
 
-            {/* Login Link */}
             <View style={styles.loginLink}>
               <Text style={styles.loginText}>Already have an account? </Text>
               <Link href="/(auth)/sign-in" asChild>
@@ -355,6 +491,7 @@ export default function SignUpScreen() {
   );
 }
 
+// Styles remain the same
 const styles = StyleSheet.create({
   container: {
     flex: 1,
