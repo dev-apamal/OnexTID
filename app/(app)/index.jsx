@@ -15,7 +15,7 @@ export default function HomeScreen() {
             Ready to find your perfect job match?
           </Text>
         </View>
-        {/* Card Content */}
+
         <JobCard />
       </View>
     </SafeAreaView>

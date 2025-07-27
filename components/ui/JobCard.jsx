@@ -5,10 +5,8 @@ export default function JobCard() {
     <Pressable className="border border-gray-300 rounded-2xl p-4 bg-white">
       {/* Title & Subtitle */}
       <View className="mb-3">
-        <Text className="text-lg font-semibold text-gray-900">
-          Hospital Name
-        </Text>
-        <Text className="text-base text-gray-700">Position</Text>
+        <Text className="text-lg font-semibold ">Position Name</Text>
+        {/* <Text className="text-base text-gray-700">Position</Text> */}
       </View>
 
       {/* Job Details Grid */}
