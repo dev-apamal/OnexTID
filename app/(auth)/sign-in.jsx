@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   Alert,
   KeyboardAvoidingView,
@@ -54,7 +53,7 @@ export default function SignInScreen() {
       if (result.success) {
         if (result.isVerified) {
           // User is verified, redirect to main app
-          router.replace("/(app)");
+          router.replace("(app)");
         } else {
           // User needs to verify email
           Alert.alert(

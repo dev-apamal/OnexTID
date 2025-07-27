@@ -45,7 +45,7 @@ export default function RootLayout() {
           {/* Error route */}
         </Stack>
       </NavigationHandler>
-      <StatusBar style="auto" />
+      <StatusBar style="dark" />
     </AuthProvider>
   );
 }
