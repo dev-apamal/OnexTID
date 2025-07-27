@@ -1,11 +1,53 @@
 import { Pressable, Text, View } from "react-native";
 
-export default function JobCard() {
+export default function JobCard({ job }) {
+  const jobData = {
+    title: job?.title || "Position Not Specified",
+    salary: job?.salary || "Salary not listed",
+    location: job?.location || "Location not specified",
+    hospital: job?.hospital || job?.company || "Hospital not specified",
+    schedule: job?.schedule || job?.type || "Not specified",
+    startDate: job?.startDate || job?.start_date || "Not specified",
+    jobType: job?.jobType || job?.employment_type || "Not specified",
+    postedBy: job?.postedBy || job?.posted_by || "Unknown",
+    postedDate:
+      job?.postedDate || job?.posted_date || job?.createdAt || "Unknown",
+    ...job,
+  };
+
+  const formatDate = (date) => {
+    if (!date) return "Unknown";
+
+    try {
+      // Handle Firestore timestamp
+      if (date?.toDate) {
+        return date.toDate().toLocaleDateString();
+      }
+
+      // Handle regular date
+      if (date instanceof Date) {
+        return date.toLocaleDateString();
+      }
+
+      // Handle string date
+      if (typeof date === "string") {
+        const parsedDate = new Date(date);
+        if (!isNaN(parsedDate.getTime())) {
+          return parsedDate.toLocaleDateString();
+        }
+      }
+
+      return date.toString();
+    } catch (error) {
+      return "Unknown";
+    }
+  };
+
   return (
     <Pressable className="border border-gray-300 rounded-2xl p-4 bg-white">
       {/* Title & Subtitle */}
       <View className="mb-3">
-        <Text className="text-lg font-semibold ">Position Name</Text>
+        <Text className="text-lg font-semibold ">{jobData.position}</Text>
         {/* <Text className="text-base text-gray-700">Position</Text> */}
       </View>
 
@@ -18,13 +60,13 @@ export default function JobCard() {
               <Text className="text-xs text-gray-600 uppercase tracking-wide">
                 Salary
               </Text>
-              <Text className="text-sm font-medium">$75,000 - $95,000</Text>
+              <Text className="text-sm font-medium">{jobData.salary}</Text>
             </View>
             <View className="flex-1">
               <Text className="text-xs text-gray-600 uppercase tracking-wide">
                 Location
               </Text>
-              <Text className="text-sm font-medium">San Francisco, CA</Text>
+              <Text className="text-sm font-medium">{jobData.location}</Text>
             </View>
           </View>
 
@@ -34,13 +76,13 @@ export default function JobCard() {
               <Text className="text-xs text-gray-600 uppercase tracking-wide">
                 Hospital
               </Text>
-              <Text className="text-sm font-medium">General Hospital</Text>
+              <Text className="text-sm font-medium">{jobData.hospital}</Text>
             </View>
             <View className="flex-1">
               <Text className="text-xs text-gray-600 uppercase tracking-wide">
                 Schedule
               </Text>
-              <Text className="text-sm font-medium">Full-time</Text>
+              <Text className="text-sm font-medium">{jobData.schedule}</Text>
             </View>
           </View>
 
@@ -50,13 +92,13 @@ export default function JobCard() {
               <Text className="text-xs text-gray-600 uppercase tracking-wide">
                 Start Date
               </Text>
-              <Text className="text-sm font-medium">Immediate</Text>
+              <Text className="text-sm font-medium">{jobData.date}</Text>
             </View>
             <View className="flex-1">
               <Text className="text-xs text-gray-600 uppercase tracking-wide">
                 Type
               </Text>
-              <Text className="text-sm font-medium">Permanent</Text>
+              <Text className="text-sm font-medium">{jobData.type}</Text>
             </View>
           </View>
         </View>
@@ -67,13 +109,13 @@ export default function JobCard() {
         <View>
           <Text className="text-xs text-gray-600">Posted by</Text>
           <Text className="text-sm font-medium text-gray-600">
-            Dr. Sarah Johnson
+            {jobData.createdBy}
           </Text>
         </View>
         <View className="items-end">
           <Text className="text-xs text-gray-600">Posted on</Text>
           <Text className="text-sm font-medium text-gray-600">
-            Jan 15, 2024
+            {formatDate(jobData.createdAt)}
           </Text>
         </View>
       </View>

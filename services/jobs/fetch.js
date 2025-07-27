@@ -1,6 +1,6 @@
 // Production-Ready Firebase Job Service
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
-import { firestore } from "./firebaseConfig.js";
+import { firestore } from "../../firebaseConfig";
 
 // Simple cache storage
 const cache = new Map();
