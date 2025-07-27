@@ -2,52 +2,44 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { globalStyles } from "../../constants/styles";
 import { FlatList, RefreshControl, Text, View } from "react-native";
 import JobCard from "../../components/ui/JobCard";
-import { fetchAllJobs } from "../../services/jobs/fetch";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import JobCardSkeleton from "../../components/ui/JobCardSkeleton";
 import { useCallback } from "react";
+import { useJobs } from "../../hooks/useJobs";
+import HomeHeader from "../../components/ui/Header";
+import ErrorMessage from "../../components/ui/ErrorMessage";
 
 const MemoizedJobCard = React.memo(JobCard);
 
+const SKELETON_COUNT = 4;
+const ITEM_SEPARATOR_HEIGHT = 16;
+const LIST_PADDING_BOTTOM = 40;
+const MAX_RENDER_PER_BATCH = 8;
+
 export default function HomeScreen() {
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
-
-  useEffect(() => {
-    loadJobs();
-  }, []);
-
-  const loadJobs = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const jobData = await fetchAllJobs();
-      setJobs(jobData);
-    } catch (err) {
-      setError(err.message);
-      console.error("Error loading jobs:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onRefresh = async () => {
-    try {
-      setRefreshing(true);
-      setError(null);
-      const jobData = await fetchAllJobs(false);
-      setJobs(jobData);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setRefreshing(false);
-    }
-  };
+  const { jobs, loading, error, refreshing, loadJobs, onRefresh } = useJobs();
 
   const renderJob = useCallback(
     ({ item }) => <MemoizedJobCard job={item} />,
+    []
+  );
+
+  const renderSeparator = useCallback(
+    () => <View style={{ height: ITEM_SEPARATOR_HEIGHT }} />,
+    []
+  );
+
+  const renderEmptyComponent = useCallback(
+    () => (
+      <View className="flex-1 justify-center items-center py-20">
+        <Text className="text-gray-600 text-center mb-2">
+          No jobs available
+        </Text>
+        <Text className="text-gray-600 text-sm text-center">
+          Pull down to refresh and check for new jobs
+        </Text>
+      </View>
+    ),
     []
   );
 
@@ -55,17 +47,11 @@ export default function HomeScreen() {
     return (
       <SafeAreaView style={globalStyles.safeAreaContainer}>
         <View style={[globalStyles.content, { justifyContent: "flex-start" }]}>
-          <View className="flex-col w-full gap-1 mb-6">
-            <Text className="text-4xl font-bold">Home</Text>
-            <Text className="text-base font-medium text-gray-600">
-              Ready to find your perfect job match?
-            </Text>
-          </View>
+          <HomeHeader jobCount={0} />
           <View className="gap-4">
-            <JobCardSkeleton />
-            <JobCardSkeleton />
-            <JobCardSkeleton />
-            <JobCardSkeleton />
+            {Array.from({ length: SKELETON_COUNT }, (_, index) => (
+              <JobCardSkeleton key={index} />
+            ))}
           </View>
         </View>
       </SafeAreaView>
@@ -76,20 +62,8 @@ export default function HomeScreen() {
     return (
       <SafeAreaView style={globalStyles.safeAreaContainer}>
         <View style={[globalStyles.content, { justifyContent: "flex-start" }]}>
-          <View className="flex-col w-full gap-1 mb-6">
-            <Text className="text-4xl font-bold">Home</Text>
-            <Text className="text-base font-medium text-gray-600">
-              Ready to find your perfect job match?
-            </Text>
-          </View>
-          <View style={[{ justifyContent: "center", alignItems: "center" }]}>
-            <Text className="text-red-600 text-center mb-4">
-              Error: {error}
-            </Text>
-            <Text className="text-blue-600 underline" onPress={loadJobs}>
-              Tap to retry
-            </Text>
-          </View>
+          <HomeHeader jobCount={0} />
+          <ErrorMessage error={error} onRetry={loadJobs} />
         </View>
       </SafeAreaView>
     );
@@ -99,39 +73,20 @@ export default function HomeScreen() {
     <SafeAreaView style={globalStyles.safeAreaContainer}>
       <View style={[globalStyles.content, { justifyContent: "flex-start" }]}>
         {/* Header Content */}
-        <View className="flex-col w-full gap-1 mb-6">
-          <Text className="text-4xl font-bold">Home</Text>
-          <Text className="text-base font-medium text-gray-600">
-            Ready to find your perfect job match?
-          </Text>
-        </View>
-        {jobs.length > 0 && (
-          <Text className="text-sm text-gray-600 mb-4">
-            {jobs.length} jobs available • Pull down to refresh
-          </Text>
-        )}
+        <HomeHeader jobCount={jobs.length} />
         <FlatList
           data={jobs}
           renderItem={renderJob}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
-          contentContainerStyle={{ paddingBottom: 40 }}
+          ItemSeparatorComponent={renderSeparator}
+          ListEmptyComponent={renderEmptyComponent}
+          contentContainerStyle={{ paddingBottom: LIST_PADDING_BOTTOM }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
-          ListEmptyComponent={() => (
-            <View className="flex-1 justify-center items-center py-20">
-              <Text className="text-gray-600 text-center mb-2">
-                No jobs available
-              </Text>
-              <Text className="text-gray-500 text-sm text-center">
-                Pull down to refresh and check for new jobs
-              </Text>
-            </View>
-          )}
           removeClippedSubviews={true}
-          maxToRenderPerBatch={8}
+          maxToRenderPerBatch={MAX_RENDER_PER_BATCH}
         />
       </View>
     </SafeAreaView>

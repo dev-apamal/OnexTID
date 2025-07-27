@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from "react-native";
+import { toTitleCase } from "../../utils/textUtils";
 
 export default function JobCard({ job }) {
   const jobData = {
@@ -66,7 +67,9 @@ export default function JobCard({ job }) {
               <Text className="text-xs text-gray-600 uppercase tracking-wide">
                 Location
               </Text>
-              <Text className="text-sm font-medium">{jobData.location}</Text>
+              <Text className="text-sm font-medium">
+                {toTitleCase(jobData.location)}
+              </Text>
             </View>
           </View>
 
@@ -76,7 +79,9 @@ export default function JobCard({ job }) {
               <Text className="text-xs text-gray-600 uppercase tracking-wide">
                 Hospital
               </Text>
-              <Text className="text-sm font-medium">{jobData.hospital}</Text>
+              <Text className="text-sm font-medium">
+                {toTitleCase(jobData.hospital)}
+              </Text>
             </View>
             <View className="flex-1">
               <Text className="text-xs text-gray-600 uppercase tracking-wide">
@@ -98,7 +103,9 @@ export default function JobCard({ job }) {
               <Text className="text-xs text-gray-600 uppercase tracking-wide">
                 Type
               </Text>
-              <Text className="text-sm font-medium">{jobData.type}</Text>
+              <Text className="text-sm font-medium">
+                {toTitleCase(jobData.type)}
+              </Text>
             </View>
           </View>
         </View>
