@@ -1,5 +1,12 @@
-// Production-Ready Firebase Job Service
-import { collection, getDocs, doc, getDoc } from "firebase/firestore";
+// Production-Ready Firebase Job Service with Sorting
+import {
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+  query,
+  orderBy,
+} from "firebase/firestore";
 import { firestore } from "../../firebaseConfig";
 
 // Simple cache storage
@@ -77,12 +84,12 @@ const logError = (operation, error, context = {}) => {
 };
 
 /**
- * Fetch all jobs from Firebase with production features
+ * Fetch all jobs from Firebase with production features - SORTED BY LATEST FIRST
  * @param {boolean} useCache - Whether to use cached data (default: true)
- * @returns {Promise<Array>} Array of job objects
+ * @returns {Promise<Array>} Array of job objects sorted by createdAt (latest first)
  */
 export const fetchAllJobs = async (useCache = true) => {
-  const cacheKey = "all_jobs";
+  const cacheKey = "all_jobs_sorted";
 
   try {
     // Try cache first
@@ -93,9 +100,15 @@ export const fetchAllJobs = async (useCache = true) => {
       }
     }
 
-    // Fetch with retry logic
+    // Fetch with retry logic and sorting
     const jobs = await withRetry(async () => {
-      const snapshot = await getDocs(collection(firestore, "jobs"));
+      // Create query with sorting by createdAt descending (latest first)
+      const jobsQuery = query(
+        collection(firestore, "jobs"),
+        orderBy("createdAt", "desc")
+      );
+
+      const snapshot = await getDocs(jobsQuery);
       const jobList = [];
 
       snapshot.forEach((docSnapshot) => {
@@ -103,10 +116,18 @@ export const fetchAllJobs = async (useCache = true) => {
 
         // Basic data validation
         if (jobData && typeof jobData === "object") {
-          jobList.push({
+          // Convert Firestore timestamps to readable format
+          const processedJob = {
             id: docSnapshot.id,
             ...jobData,
-          });
+            // Convert Firestore timestamp to ISO string if it exists
+            createdAt:
+              jobData.createdAt?.toDate?.()?.toISOString() || jobData.createdAt,
+            updatedAt:
+              jobData.updatedAt?.toDate?.()?.toISOString() || jobData.updatedAt,
+          };
+
+          jobList.push(processedJob);
         }
       });
 
@@ -175,10 +196,18 @@ export const fetchJobById = async (jobId, useCache = true) => {
         throw new Error("Invalid job data received");
       }
 
-      return {
+      // Process timestamps
+      const processedJob = {
         id: docSnap.id,
         ...jobData,
+        // Convert Firestore timestamps to ISO strings
+        createdAt:
+          jobData.createdAt?.toDate?.()?.toISOString() || jobData.createdAt,
+        updatedAt:
+          jobData.updatedAt?.toDate?.()?.toISOString() || jobData.updatedAt,
       };
+
+      return processedJob;
     });
 
     // Save to cache (including null for not found)
@@ -234,7 +263,17 @@ export const fetchJobsByIds = async (jobIds, useCache = true) => {
       })
     );
 
-    return await Promise.all(promises);
+    const results = await Promise.all(promises);
+
+    // Sort the results by createdAt if they have timestamps
+    const sortedResults = results.sort((a, b) => {
+      if (!a || !b) return 0;
+      const aDate = new Date(a.createdAt || 0);
+      const bDate = new Date(b.createdAt || 0);
+      return bDate - aDate; // Latest first
+    });
+
+    return sortedResults;
   } catch (error) {
     logError("fetchJobsByIds", error, { jobIds: validJobIds });
     throw new Error("Unable to load some job details. Please try again.");
@@ -276,6 +315,7 @@ export const getServiceHealth = () => {
     config: {
       maxRetries: MAX_RETRIES,
       cacheEnabled: true,
+      sortOrder: "createdAt desc (latest first)",
     },
   };
 };
@@ -305,119 +345,3 @@ export const prefetchJobs = async (jobIds) => {
     console.warn("Prefetch error:", error.message);
   }
 };
-
-// Usage Examples:
-/*
-import { 
-  fetchAllJobs, 
-  fetchJobById, 
-  fetchJobsByIds,
-  clearJobCache, 
-  getServiceHealth,
-  prefetchJobs 
-} from './JobService.js';
-
-// 1. Basic usage (production optimized)
-try {
-  const jobs = await fetchAllJobs();
-  console.log('Jobs loaded:', jobs.length);
-} catch (error) {
-  console.error('Error:', error.message);
-  // Show user-friendly error in UI
-}
-
-// 2. Batch fetch multiple jobs
-const jobIds = ['job1', 'job2', 'job3'];
-const jobs = await fetchJobsByIds(jobIds);
-console.log('Batch loaded:', jobs.filter(job => job !== null).length);
-
-// 3. Prefetch for better performance
-const upcomingJobIds = ['job4', 'job5', 'job6'];
-prefetchJobs(upcomingJobIds); // Non-blocking
-
-// 4. Monitor service health
-const health = getServiceHealth();
-console.log('Service status:', health);
-
-// 5. Production React component
-import React, { useState, useEffect } from 'react';
-
-const ProductionJobList = () => {
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [retryCount, setRetryCount] = useState(0);
-  
-  const loadJobs = async (showLoading = true) => {
-    try {
-      if (showLoading) setLoading(true);
-      setError(null);
-      
-      const jobData = await fetchAllJobs();
-      setJobs(jobData);
-      setRetryCount(0);
-    } catch (err) {
-      setError(err.message);
-      console.error('Failed to load jobs:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRetry = () => {
-    setRetryCount(prev => prev + 1);
-    loadJobs();
-  };
-
-  useEffect(() => {
-    loadJobs();
-  }, []);
-
-  if (loading && jobs.length === 0) {
-    return <div>Loading jobs...</div>;
-  }
-
-  return (
-    <div>
-      {error && (
-        <div style={{ 
-          background: '#fee', 
-          padding: '10px', 
-          borderRadius: '4px',
-          marginBottom: '10px' 
-        }}>
-          <p>Error: {error}</p>
-          <button onClick={handleRetry}>
-            Retry {retryCount > 0 && `(${retryCount})`}
-          </button>
-        </div>
-      )}
-      
-      <button onClick={() => loadJobs(false)}>
-        Refresh {loading && '...'}
-      </button>
-      
-      {jobs.length === 0 ? (
-        <p>No jobs available</p>
-      ) : (
-        <div>
-          <p>{jobs.length} jobs found</p>
-          {jobs.map(job => (
-            <div key={job.id} style={{ 
-              border: '1px solid #ddd', 
-              padding: '10px', 
-              margin: '5px 0' 
-            }}>
-              <h3>{job.title || 'Untitled Job'}</h3>
-              <p>{job.company || 'Unknown Company'}</p>
-              <p>{job.location || 'Location not specified'}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default ProductionJobList;
-*/
