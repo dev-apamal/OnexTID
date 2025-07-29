@@ -9,7 +9,7 @@ import {
   updateProfile,
 } from "firebase/auth";
 import { auth, firestore } from "../firebaseConfig";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const AuthContext = createContext({});
 
@@ -23,12 +23,27 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [initializing, setInitializing] = useState(true);
 
+  const fetchUserProfile = async (uid) => {
+    try {
+      const userDoc = await getDoc(doc(firestore, "users", uid));
+      if (userDoc.exists()) {
+        setUserProfile(userDoc.data());
+      } else {
+        setUserProfile(null);
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      setUserProfile(null);
+    }
+  };
+
   // Monitor authentication state changes
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       console.log(
         "Auth state changed:",
         firebaseUser?.email,
@@ -37,13 +52,20 @@ export const AuthProvider = ({ children }) => {
       );
       setUser(firebaseUser);
 
+      // Fetch user profile if user is authenticated
+      if (firebaseUser) {
+        await fetchUserProfile(firebaseUser.uid);
+      } else {
+        setUserProfile(null);
+      }
+
       if (initializing) {
         setInitializing(false);
       }
       setIsLoading(false);
     });
 
-    return unsubscribe; // unsubscribe on unmount
+    return unsubscribe;
   }, [initializing]);
 
   // Create user account and send verification email
@@ -251,6 +273,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     isLoading,
+    userProfile,
     isAuthenticated: !!user,
     isVerified: user?.emailVerified || false,
     signUp,

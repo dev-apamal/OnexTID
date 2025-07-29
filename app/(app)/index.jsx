@@ -13,7 +13,7 @@ const MemoizedJobCard = React.memo(JobCard);
 
 const SKELETON_COUNT = 4;
 const ITEM_SEPARATOR_HEIGHT = 16;
-const LIST_PADDING_BOTTOM = 40;
+const LIST_PADDING_BOTTOM = 16;
 const MAX_RENDER_PER_BATCH = 8;
 
 export default function HomeScreen() {
