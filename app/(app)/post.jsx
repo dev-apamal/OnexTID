@@ -1,23 +1,23 @@
 // PostJobScreen.js
-import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  ScrollView,
-  StyleSheet,
   Alert,
-  Modal,
+  BackHandler,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
-  BackHandler,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
-import { postJob } from "../../services/jobs/post";
-import { useAuth } from "../../contexts/AuthContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { globalStyles } from "../../constants/styles";
+import { useAuth } from "../../contexts/AuthContext";
+import { postJob } from "../../services/jobs/post";
 import { toTitleCase } from "../../utils/textUtils";
 
 const PostJobScreen = () => {
@@ -317,6 +317,7 @@ const PostJobScreen = () => {
                   <Text className="text-sm font-medium">Hospital Name</Text>
                   <View>
                     <TextInput
+                      className="bg-neutral-100"
                       ref={hospitalRef}
                       style={[
                         styles.modernInput,
@@ -352,6 +353,7 @@ const PostJobScreen = () => {
                   <View>
                     <TextInput
                       ref={locationRef}
+                      className="bg-neutral-100"
                       style={[
                         styles.modernInput,
                         errors.location && styles.errorInput,
@@ -389,6 +391,7 @@ const PostJobScreen = () => {
                 <View className="gap-2">
                   <Text className="text-sm font-medium ">Position</Text>
                   <Pressable
+                    className="bg-neutral-100"
                     style={[
                       styles.modernInput,
                       styles.selectInput,
@@ -423,6 +426,7 @@ const PostJobScreen = () => {
                 <View className="gap-2">
                   <Text className="text-sm font-medium">Job Type</Text>
                   <Pressable
+                    className="bg-neutral-100"
                     style={[
                       styles.modernInput,
                       styles.selectInput,
@@ -470,6 +474,7 @@ const PostJobScreen = () => {
                     <View className="relative">
                       <Text style={styles.currencyPrefix}>₹</Text>
                       <TextInput
+                        className="bg-neutral-100"
                         ref={salaryRef}
                         style={[
                           styles.modernInput,
@@ -508,6 +513,7 @@ const PostJobScreen = () => {
                 <View className="gap-2">
                   <Text className="text-sm font-medium ">Start Date</Text>
                   <Pressable
+                    className="bg-neutral-100"
                     style={[
                       styles.modernInput,
                       styles.selectInput,
@@ -560,6 +566,7 @@ const PostJobScreen = () => {
                   <Text className="text-sm font-medium">Schedule</Text>
                   <View>
                     <TextInput
+                      className="bg-neutral-100"
                       ref={scheduleRef}
                       style={[
                         styles.modernInput,
@@ -762,9 +769,6 @@ const styles = StyleSheet.create({
 
   // Modern Input Styles
   modernInput: {
-    backgroundColor: "#f9fafb",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 12,

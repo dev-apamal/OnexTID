@@ -45,7 +45,7 @@ export default function JobCard({ job }) {
   };
 
   return (
-    <Pressable className="border border-gray-300 rounded-2xl p-4 bg-white">
+    <Pressable className=" rounded-2xl p-4 bg-neutral-100">
       {/* Title & Subtitle */}
       <View className="mb-3">
         <Text className="text-lg font-semibold ">{jobData.position}</Text>

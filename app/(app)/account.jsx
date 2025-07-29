@@ -21,7 +21,7 @@ export default function AccountScreen() {
             Ready to find your perfect job match?
           </Text>
         </View>
-        <View className="rounded-2xl p-4 bg-neutral-50">
+        <View className="rounded-2xl p-4 bg-neutral-100">
           <View className="mb-3">
             <Text className="text-lg font-semibold ">{user?.displayName}</Text>
           </View>
@@ -60,7 +60,7 @@ export default function AccountScreen() {
                     TCMC Verified
                   </Text>
                   <Text className="text-sm font-medium">
-                    {userProfile?.tcmcVerified ? user?.tcmcVerified : "Pending"}
+                    {userProfile?.tcmcVerified ? "Verified" : "Pending"}
                   </Text>
                 </View>
               </View>
